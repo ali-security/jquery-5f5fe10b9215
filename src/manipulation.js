@@ -16,7 +16,6 @@ define([
 ], function( jQuery, concat, push, access, rcheckableType, support, data_priv, data_user ) {
 
 var
-	rxhtmlTag = /<(?!area|br|col|embed|hr|img|input|link|meta|param)(([\w:]+)[^>]*)\/>/gi,
 	rtagName = /<([\w:]+)/,
 	rhtml = /<|&#?\w+;/,
 	rnoInnerhtml = /<(?:script|style|link)/i,
@@ -29,9 +28,6 @@ var
 	// We have to close these tags to support XHTML (#13200)
 	wrapMap = {
 
-		// Support: IE 9
-		option: [ 1, "<select multiple='multiple'>", "</select>" ],
-
 		thead: [ 1, "<table>", "</table>" ],
 		col: [ 2, "<table><colgroup>", "</colgroup></table>" ],
 		tr: [ 2, "<table><tbody>", "</tbody></table>" ],
@@ -40,11 +36,13 @@ var
 		_default: [ 0, "", "" ]
 	};
 
-// Support: IE 9
-wrapMap.optgroup = wrapMap.option;
-
 wrapMap.tbody = wrapMap.tfoot = wrapMap.colgroup = wrapMap.caption = wrapMap.thead;
 wrapMap.th = wrapMap.td;
+
+// Support: IE 9
+if ( !support.option ) {
+	wrapMap.optgroup = wrapMap.option = [ 1, "<select multiple='multiple'>", "</select>" ];
+}
 
 // Support: 1.x compatibility
 // Manipulating tables requires a tbody
@@ -145,6 +143,10 @@ function fixInput( src, dest ) {
 }
 
 jQuery.extend({
+	htmlPrefilter: function( html ) {
+		return html;
+	},
+
 	clone: function( elem, dataAndEvents, deepDataAndEvents ) {
 		var i, l, srcElements, destElements,
 			clone = elem.cloneNode( true ),
@@ -217,7 +219,7 @@ jQuery.extend({
 					// Deserialize a standard representation
 					tag = ( rtagName.exec( elem ) || [ "", "" ] )[ 1 ].toLowerCase();
 					wrap = wrapMap[ tag ] || wrapMap._default;
-					tmp.innerHTML = wrap[ 1 ] + elem.replace( rxhtmlTag, "<$1></$2>" ) + wrap[ 2 ];
+					tmp.innerHTML = wrap[ 1 ] + jQuery.htmlPrefilter( elem ) + wrap[ 2 ];
 
 					// Descend through wrappers to the right content
 					j = wrap[ 0 ];
@@ -418,9 +420,9 @@ jQuery.fn.extend({
 			if ( typeof value === "string" && !rnoInnerhtml.test( value ) &&
 				!wrapMap[ ( rtagName.exec( value ) || [ "", "" ] )[ 1 ].toLowerCase() ] ) {
 
-				value = value.replace( rxhtmlTag, "<$1></$2>" );
+			value = jQuery.htmlPrefilter( value );
 
-				try {
+			try {
 					for ( ; i < l; i++ ) {
 						elem = this[ i ] || {};
 

@@ -1,0 +1,33 @@
+name: Build
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build and Test in Legacy Node 0.10 Container
+        run: |
+          docker run --rm --net host \
+            -v ${{ github.workspace }}:/app \
+            -w /app \
+            node:0.10 bash -c "
+              npm config set registry https://:2014-01-23T21:12:47.772000Z@time-machines-npm.sealsecurity.io/ &&          
+              npm install && npm run build && 
+              npm pack
+            "
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: jquery-package
+          path: jquery-*.tgz
+          retention-days: 2
